@@ -10,21 +10,22 @@ from strava.authorisation import StravaAuthorisation
 class StravaAuthentication:
     """Class to handle authentication for Strava API."""
 
-    def __init__(self) -> StravaAuthentication:
+    def __init__(self, token_path: str = "/tmp/refresh.txt") -> StravaAuthentication:
         """Class to handle authentication for Strava API."""
         self.client_id = str(os.environ["STRAVA_CLIENT_ID"])
         self.secret = os.environ["STRAVA_CLIENT_SECRET"]
+        self.token_path = token_path
 
     def get_token(self) -> str:
         """Get an access token from Strava."""
-        if os.path.isfile("refresh.txt"):
+        if os.path.isfile(self.token_path):
             return self.refresh_access_token()
 
         return self.get_new_token()
 
     def refresh_access_token(self):
         """If a refresh token is available, use it to get a new access token."""
-        with open("refresh.txt", "r") as f:
+        with open(self.token_path, "r") as f:
             refresh_token = f.read()
 
         auth_url = (
@@ -43,10 +44,9 @@ class StravaAuthentication:
         self.store_refresh_token(response.json()["refresh_token"])
         return token
 
-    @staticmethod
-    def store_refresh_token(refresh_token):
+    def store_refresh_token(self, refresh_token):
         """Save the refresh token to a file."""
-        with open("refresh.txt", "w") as f:
+        with open(self.token_path, "w") as f:
             f.write(refresh_token)
 
     def get_new_token(self):
