@@ -18,21 +18,16 @@ def main() -> None:
         destination_file_path="/tmp/refresh.txt",
     )
 
-    client = Strava()
+    if data := Strava().get_activities() != []:
+        now = str(datetime.now())
 
-    now = str(datetime.now())
+        cs.upload_ndjson(
+            data=[{**row, "_UPDATED_AT": now} for row in data],
+            file_name=f"{now}-strava-activities.ndjson",
+        )
 
-    data = client.get_activities()
-    updated = []
-
-    for row in data:
-        row["_UPDATED_AT"] = now
-        updated.append(row)
-
-    cs.upload_ndjson(
-        data=updated,
-        file_name=f"{now}-strava-activities.ndjson",
-    )
+    else:
+        print("No data found.")
 
     cs.upload_file(
         file_name="refresh.txt",
